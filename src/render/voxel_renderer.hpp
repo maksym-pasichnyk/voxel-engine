@@ -16,5 +16,7 @@ private:
 
     ShaderProgram program_;
     GLint view_projection_location_ = -1;
+    GLint block_texture_location_ = -1;
+    GLuint block_texture_array_ = 0;
 };
 }

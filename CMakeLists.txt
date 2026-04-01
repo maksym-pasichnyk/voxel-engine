@@ -7,6 +7,10 @@ find_package(GLEW REQUIRED)
 
 add_subdirectory(deps/mathematics)
 add_subdirectory(deps/SDL-release-3.4.0)
+add_subdirectory(deps/stb)
+set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+set(JSON_Install OFF CACHE BOOL "" FORCE)
+add_subdirectory(deps/json)
 
 add_executable(VoxelEngine
     src/main.cpp
@@ -21,10 +25,22 @@ add_executable(VoxelEngine
     src/render/voxel_renderer.cpp
 )
 
-target_include_directories(VoxelEngine PRIVATE src)
+add_custom_command(TARGET VoxelEngine POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rm -rf $<TARGET_FILE_DIR:VoxelEngine>/assets
+    COMMAND ${CMAKE_COMMAND} -E create_symlink
+        ${CMAKE_SOURCE_DIR}/assets
+        $<TARGET_FILE_DIR:VoxelEngine>/assets
+    VERBATIM
+)
+
+target_include_directories(VoxelEngine PRIVATE
+    src
+)
 
 target_link_libraries(VoxelEngine PRIVATE
     SDL3::SDL3
     GLEW::GLEW
     mathematics::mathematics
+    stb::image
+    nlohmann_json::nlohmann_json
 )
