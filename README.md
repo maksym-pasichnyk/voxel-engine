@@ -1,13 +1,14 @@
 # VoxelEngine
 
-VoxelEngine is a compact C++ voxel sandbox prototype built with SDL3, OpenGL 4.1, GLEW, and the local `mathematics` library. The current executable renders a procedurally generated block world, updates chunks around the player, and draws chunk meshes with a simple color-based shader pipeline.
+VoxelEngine is a compact C++ voxel sandbox prototype built with SDL3, OpenGL 4.1, GLEW, and the local `mathematics` library. The current executable renders a procedurally generated block world, updates chunks around the player, and draws chunk meshes with a texture-array shader pipeline.
 
 ## Current Status
 
 - The active application is the runtime assembled in `src/core`, `src/platform`, `src/scene`, `src/game`, `src/world`, and `src/render`.
 - CMake currently builds a single executable target: `VoxelEngine`.
-- The runtime is self-contained: shaders are embedded in code and block appearance is generated procedurally in the mesher.
-- There is no external asset directory in the current project layout.
+- Shaders are currently embedded in source.
+- Block textures are loaded from `assets/textures/*.json` and referenced `*.png` files at startup.
+- Assets are exposed to the runtime via a CMake post-build symlink into the executable output directory.
 
 ## Requirements
 
@@ -82,10 +83,14 @@ src/
   scene/     FPS camera math and transforms
   world/     Chunk storage, terrain generation, and meshing
 
+assets/
+  textures/  Texture descriptors (`*.json`) and source images (`*.png`)
+
 deps/
   mathematics/        Local math dependency used by the runtime
   SDL-release-3.4.0/  Vendored SDL3 source
-  json/               Third-party JSON library kept in the repo
+  stb/                stb_image integration used for PNG loading
+  json/               nlohmann/json used for texture descriptor parsing
 
 docs/
   architecture.md  Detailed technical documentation for the current runtime
@@ -95,7 +100,7 @@ docs/
 
 - Voxel geometry is meshed on a per-chunk basis.
 - Faces are emitted only when the neighboring voxel is air.
-- Vertex data stores position plus baked face color.
+- Vertex data stores position, UV, texture layer index, and baked shade.
 - The renderer uploads chunk VBO/VAO state lazily, only when needed.
 - The projection uses a 70 degree field of view and a far plane of 512 units.
 
@@ -111,7 +116,8 @@ docs/
 - No persistence or save format
 - No asynchronous chunk streaming
 - No frustum culling; visible chunks are selected by radial distance in X/Z
-- No external asset or material pipeline in the active renderer
+- Texture set is fixed in code (`grass`, `dirt`, `stone`), with no generalized material registry
+- Animation metadata for water/lava descriptors is not consumed yet
 - No automated tests are defined in the current CMake setup
 
 ## Further Reading
