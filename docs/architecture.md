@@ -26,6 +26,8 @@ Linked dependencies:
 - `SDL3::SDL3`
 - `GLEW::GLEW`
 - `mathematics::mathematics`
+- `stb::image`
+- `nlohmann_json::nlohmann_json`
 
 ## Execution Flow
 
@@ -164,8 +166,8 @@ Key properties:
 
 - Each block face is predefined as two triangles
 - A face is emitted only when the neighboring block is `air`
-- Per-vertex attributes are `position.xyz` and `color.rgb`
-- Colors are derived from block type and darkened by a simple directional shade term
+- Per-vertex attributes are `position.xyz`, `uv.xy`, `texture_layer`, and `shade`.
+- `texture_layer` comes from block ID mapping in the mesher (`grass=0`, `dirt=1`, `stone=2`).
 
 The current mesher produces straightforward geometry. It does not implement greedy meshing, index buffers, ambient occlusion, LODs, or transparency separation.
 
@@ -193,21 +195,21 @@ The renderer is responsible for:
 The shader pipeline is intentionally simple:
 
 - Vertex shader transforms voxel vertices by a single `u_view_projection` matrix
-- Fragment shader writes the interpolated color directly to the framebuffer
+- Fragment shader samples albedo from `sampler2DArray u_block_textures` and multiplies RGB by interpolated `shade`
 
-There is no texture sampling, lighting pass, shadowing, post-processing, or render graph in the active runtime.
+There is no lighting pass, shadowing, post-processing, or render graph in the active runtime.
 
 ## Runtime Data Model
 
-The current executable does not rely on an external asset directory.
+The current executable uses a small asset directory alongside code-driven systems.
 
 That means:
 
 - Shader source is embedded in C++ strings
-- Block appearance comes from hard-coded colors in the mesher
-- Terrain generation is code-driven rather than data-driven
+- Block textures are resolved through JSON descriptors under `assets/textures`
+- The texture array is currently built from a fixed asset list (`grass`, `dirt`, `stone`)
 
-This keeps the runtime small and easy to build, but it also means visual content is coupled directly to code.
+This keeps the runtime small and easy to build, but visual content wiring is still partly coupled to code.
 
 ## Known Constraints
 
@@ -216,7 +218,7 @@ This keeps the runtime small and easy to build, but it also means visual content
 - Visibility is distance-based rather than frustum-based
 - GPU uploads happen during rendering when a mesh is first needed
 - There is no serialization, editor layer, or debug UI
-- There is no external asset ingestion layer
+- Asset ingestion exists but is minimal and schema-light (image path + optional metadata currently unused)
 - The project currently exposes no automated test suite through CMake
 
 ## Extension Points
@@ -224,7 +226,7 @@ This keeps the runtime small and easy to build, but it also means visual content
 The current design is small enough that likely evolution paths are clear:
 
 - Replace analytic terrain with layered noise or biome-driven generation
-- Move shaders out of source and into asset files
+- Externalize shader sources and introduce a hot-reload pipeline
 - Add a material or texture atlas system
 - Introduce chunk eviction and asynchronous streaming
 - Separate simulation, asset loading, and rendering concerns further
