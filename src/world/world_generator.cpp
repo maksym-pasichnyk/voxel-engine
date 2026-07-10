@@ -11,7 +11,8 @@ auto terrain_height(int world_x, int world_z) -> int {
 }
 }
 
-void WorldGenerator::generate(ChunkCoord const& coord, Chunk& chunk) {
+auto WorldGenerator::generate_blocks(ChunkCoord const& coord) -> std::array<BlockId, kChunkVolume> {
+    std::array<BlockId, kChunkVolume> blocks = {};
     FVector3I const origin = chunk_origin(coord);
 
     for (int z = 0; z < kChunkSize; z += 1) {
@@ -31,12 +32,11 @@ void WorldGenerator::generate(ChunkCoord const& coord, Chunk& chunk) {
                     block = BlockId::stone;
                 }
 
-                chunk.blocks[flatten_index(x, y, z)] = block;
+                blocks[flatten_index(x, y, z)] = block;
             }
         }
     }
 
-    chunk.generated = true;
-    chunk.dirty = true;
+    return blocks;
 }
 }

@@ -53,6 +53,7 @@ auto Application::run() -> int {
 }
 
 void Application::shutdown() {
+    world_.shutdown_generation();
     renderer_.shutdown(world_);
     window_.shutdown();
 }
